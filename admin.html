@@ -321,6 +321,7 @@
               <th>Issued On</th>
               <th>Status</th>
               <th>Verify Link</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="table-body">
@@ -357,7 +358,7 @@
       
       tbody.innerHTML = `
         <tr>
-          <td colspan="6">
+          <td colspan="7">
             <div class="state-message">
               <div class="spinner"></div>
               Loading database...
@@ -387,7 +388,7 @@
         if (!data.success || data.certificates.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="6">
+              <td colspan="7">
                 <div class="state-message">
                   No certificates generated yet.
                 </div>
@@ -417,6 +418,9 @@
               <td>
                 <a href="/verify.html?id=${encodeURIComponent(cert.id)}" target="_blank" style="color: var(--green-deep); font-weight: 700; text-decoration: none;">View →</a>
               </td>
+              <td>
+                <button onclick="revokeCertificate('${cert.id}')" style="background:transparent; border:none; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; text-decoration:underline;">Revoke</button>
+              </td>
             </tr>
           `;
         }).join('');
@@ -424,12 +428,36 @@
       } catch (err) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="state-message" style="color: #dc2626;">
                 Error loading database. Please try again.
               </div>
             </td>
           </tr>`;
+      }
+    }
+
+    async function revokeCertificate(id) {
+      if (!confirm(`Are you sure you want to completely revoke the certificate ID: ${id}? It will be permanently removed and show as Invalid when scanned.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/delete?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: {
+            'Authorization': authHeaderValue
+          }
+        });
+
+        if (res.ok) {
+          // Reload the table
+          loadCertificates();
+        } else {
+          alert('Failed to revoke certificate. Check permissions.');
+        }
+      } catch (err) {
+        alert('Network error while revoking certificate.');
       }
     }
   </script>
