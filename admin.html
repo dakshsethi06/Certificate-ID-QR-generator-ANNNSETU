@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – PN Annsetu Networks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep: #00361A;
+      --green-mid: #1A4D2E;
+      --green-light: #9DD3AA;
+      --green-bg: #B8F0C5;
+      --amber: #FFB955;
+      --bg: #F9F9F8;
+      --bg-alt: #F3F4F3;
+      --text: #414942;
+      --text-light: #536757;
+      --white: #ffffff;
+      --border: #e5e7e5;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAVBAR ──────────────────────────────────── */
+    .navbar {
+      background: var(--white);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--green-deep);
+      color: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.95rem;
+    }
+
+    .nav-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--green-deep);
+      letter-spacing: -0.5px;
+    }
+
+    /* ── CONTAINER ───────────────────────────────── */
+    .container {
+      max-width: 1000px;
+      margin: 48px auto;
+      padding: 0 24px;
+    }
+
+    .header-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--green-deep);
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .btn-refresh {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--amber);
+      color: #291800;
+      border: none;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-refresh:hover {
+      background: #F59E0B;
+    }
+
+    /* ── TABLE ───────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg-alt);
+      color: var(--text-light);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: rgba(26, 77, 46, 0.02);
+    }
+
+    .id-cell {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--green-deep);
+      background: rgba(0, 54, 26, 0.05);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(22, 163, 74, 0.1);
+      color: #16a34a;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* ── LOADING & EMPTY STATE ───────────────────── */
+    .state-message {
+      padding: 64px 24px;
+      text-align: center;
+      color: var(--text-light);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green-mid);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/">
+        <div class="nav-logo">A</div>
+        <div class="nav-name">Annsetu</div>
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header-section">
+      <div>
+        <h1 class="title">Generated Certificates</h1>
+        <p class="subtitle">View all authentic certificates issued in the database.</p>
+      </div>
+      <button class="btn-refresh" onclick="loadCertificates()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Refresh Data
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Certificate ID</th>
+              <th>Issued On</th>
+              <th>Status</th>
+              <th>Verify Link</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Data will be loaded here -->
+            <tr>
+              <td colspan="4">
+                <div class="state-message">
+                  <div class="spinner"></div>
+                  Loading database...
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadCertificates() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4">
+            <div class="state-message">
+              <div class="spinner"></div>
+              Loading database...
+            </div>
+          </td>
+        </tr>`;
+
+      try {
+        const res = await fetch('/api/list');
+        const data = await res.json();
+
+        if (!data.success || data.certificates.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4">
+                <div class="state-message">
+                  No certificates generated yet.
+                </div>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.certificates.map(cert => {
+          const date = new Date(cert.timestamp).toLocaleString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+          
+          return `
+            <tr>
+              <td><span class="id-cell">${cert.id}</span></td>
+              <td>${date}</td>
+              <td>
+                <span class="status-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Authentic
+                </span>
+              </td>
+              <td>
+                <a href="/verify.html?id=${encodeURIComponent(cert.id)}" target="_blank" style="color: var(--green-deep); font-weight: 700; text-decoration: none;">View →</a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              <div class="state-message" style="color: #dc2626;">
+                Error loading database. Please try again.
+              </div>
+            </td>
+          </tr>`;
+      }
+    }
+
+    // Load immediately
+    loadCertificates();
+  </script>
+</body>
+</html>
