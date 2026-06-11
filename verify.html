@@ -340,6 +340,16 @@
         </div>
         <div class="status-title valid">Certificate Verified</div>
         <div class="cert-details">
+          ${cert.name ? `
+          <div class="row">
+            <span class="label">Issued To</span>
+            <span class="value">${cert.name}</span>
+          </div>` : ''}
+          ${cert.position ? `
+          <div class="row">
+            <span class="label">Position</span>
+            <span class="value">${cert.position}</span>
+          </div>` : ''}
           <div class="row">
             <span class="label">Certificate ID</span>
             <span class="value">${cert.id}</span>

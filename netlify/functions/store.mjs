@@ -10,7 +10,7 @@ export default async (req, context) => {
   }
 
   try {
-    const { id, timestamp } = await req.json();
+    const { id, timestamp, name, position } = await req.json();
 
     if (!id) {
       return new Response(JSON.stringify({ error: "Missing id" }), {
@@ -20,7 +20,12 @@ export default async (req, context) => {
     }
 
     const store = getStore("certificates");
-    await store.set(id, JSON.stringify({ id, timestamp: timestamp || new Date().toISOString() }));
+    await store.set(id, JSON.stringify({ 
+      id, 
+      timestamp: timestamp || new Date().toISOString(),
+      name: name || '',
+      position: position || ''
+    }));
 
     return new Response(JSON.stringify({ success: true, id }), {
       status: 200,

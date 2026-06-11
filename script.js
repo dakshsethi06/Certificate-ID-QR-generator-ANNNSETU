@@ -246,6 +246,9 @@ async function generateCertificate() {
     return;
   }
 
+  const nameInput = document.getElementById('inp-name').value.trim();
+  const positionInput = document.getElementById('inp-position').value.trim();
+
   currentUID = generateUID();
   const timestamp = new Date().toISOString();
   document.getElementById('out-certid').textContent = currentUID;
@@ -260,7 +263,12 @@ async function generateCertificate() {
     await fetch('/api/store', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: currentUID, timestamp })
+      body: JSON.stringify({ 
+        id: currentUID, 
+        timestamp,
+        name: nameInput,
+        position: positionInput
+      })
     });
   } catch (err) {
     console.error(err);
@@ -282,6 +290,8 @@ function resetForm() {
   document.getElementById('cert-section').classList.add('hidden');
   const bs = document.getElementById('btn-section');
   bs.style.display = '';
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-position').value = '';
   clearFile();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

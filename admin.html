@@ -240,6 +240,8 @@
           <thead>
             <tr>
               <th>Certificate ID</th>
+              <th>Recipient Name</th>
+              <th>Position</th>
               <th>Issued On</th>
               <th>Status</th>
               <th>Verify Link</th>
@@ -248,7 +250,7 @@
           <tbody id="table-body">
             <!-- Data will be loaded here -->
             <tr>
-              <td colspan="4">
+              <td colspan="6">
                 <div class="state-message">
                   <div class="spinner"></div>
                   Loading database...
@@ -266,7 +268,7 @@
       const tbody = document.getElementById('table-body');
       tbody.innerHTML = `
         <tr>
-          <td colspan="4">
+          <td colspan="6">
             <div class="state-message">
               <div class="spinner"></div>
               Loading database...
@@ -281,7 +283,7 @@
         if (!data.success || data.certificates.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="4">
+              <td colspan="6">
                 <div class="state-message">
                   No certificates generated yet.
                 </div>
@@ -299,6 +301,8 @@
           return `
             <tr>
               <td><span class="id-cell">${cert.id}</span></td>
+              <td>${cert.name || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
+              <td>${cert.position || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
               <td>${date}</td>
               <td>
                 <span class="status-badge">
@@ -316,7 +320,7 @@
       } catch (err) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="4">
+            <td colspan="6">
               <div class="state-message" style="color: #dc2626;">
                 Error loading database. Please try again.
               </div>

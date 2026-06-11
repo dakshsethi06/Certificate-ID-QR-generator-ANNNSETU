@@ -218,6 +218,38 @@ body {
   color: var(--text-light);
 }
 
+/* ── INPUT FIELDS ────────────────────────────── */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.input-group input[type="text"] {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  transition: all 0.2s;
+}
+
+.input-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--green-mid);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1);
+}
+
 /* ── POSITION EDITOR ─────────────────────────── */
 .position-editor {
   margin-bottom: 24px;
