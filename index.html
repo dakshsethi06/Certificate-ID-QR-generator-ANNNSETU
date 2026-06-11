@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Certificate Generator – PN Annsetu Networks</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/">
+        <span class="nav-logo">A</span>
+        <span class="nav-name">Annsetu</span>
+      </a>
+      <a class="nav-cta" href="https://www.annsetu.in" target="_blank">Visit Website →</a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="btn-section">
+    <div class="hero-inner">
+      <div class="hero-badge">Certificate Generator</div>
+      <h1 class="hero-title">Generate Verified Certificates<br/><span class="hero-highlight">with QR Authentication.</span></h1>
+      <p class="hero-desc">Upload your certificate image, position the verification stamp, and generate a unique ID with QR code.</p>
+
+      <!-- Upload Area -->
+      <div class="upload-card">
+        <div class="file-upload-area" id="drop-zone" onclick="document.getElementById('inp-file').click()">
+          <input type="file" id="inp-file" accept="image/*" style="display:none;" onchange="handleFileSelect(event)" />
+          <div class="upload-icon-wrap">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="upload-text" id="upload-text">Click or drag & drop your certificate image</p>
+          <p class="upload-hint">Supports PNG, JPG, JPEG</p>
+        </div>
+
+        <!-- Position editor -->
+        <div id="position-editor" class="position-editor hidden">
+          <div class="editor-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 9l7-7 7 7"/><path d="M12 2v14"/>
+              <path d="M5 15l7 7 7-7"/>
+            </svg>
+            Drag to position the QR code & ID stamp
+          </div>
+          <div class="editor-container" id="editor-container">
+            <img id="editor-img" alt="Certificate" draggable="false" />
+            <div class="stamp-handle" id="stamp-handle" title="Drag to reposition">
+              <div class="stamp-qr">QR</div>
+              <div class="stamp-id">ID: PAN-XXXX</div>
+            </div>
+          </div>
+          <button class="btn-remove" id="btn-clear" onclick="clearFile()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Remove image
+          </button>
+        </div>
+
+        <button class="btn-generate" onclick="generateCertificate()">
+          Generate Certificate
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CERTIFICATE RESULT SECTION -->
+  <div id="cert-section" class="cert-section hidden">
+    <div class="cert-inner">
+      <div class="cert-header">
+        <div class="cert-success-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+          Certificate Generated
+        </div>
+        <div class="cert-meta">
+          <span class="cert-id-label">Certificate ID</span>
+          <span class="cert-id-val" id="out-certid"></span>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper">
+        <canvas id="certCanvas"></canvas>
+      </div>
+
+      <div class="cert-actions">
+        <button class="btn-download" onclick="downloadPNG()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download PNG
+        </button>
+        <button class="btn-another" onclick="resetForm()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          Generate Another
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="nav-logo small">A</span>
+        <span class="footer-name">Annsetu</span>
+      </div>
+      <p class="footer-copy">© 2026 PN ANNSETU NETWORKS PRIVATE LIMITED.</p>
+    </div>
+  </footer>
+
+  <!-- Hidden QR target -->
+  <div id="qr-tmp" style="display:none;"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

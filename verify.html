@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Certificate – PN Annsetu Networks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep: #00361A;
+      --green-mid: #1A4D2E;
+      --green-light: #9DD3AA;
+      --green-bg: #B8F0C5;
+      --amber: #FFB955;
+      --bg: #F9F9F8;
+      --bg-alt: #F3F4F3;
+      --text: #414942;
+      --text-light: #536757;
+      --white: #ffffff;
+      --border: #e5e7e5;
+      --green-valid: #16a34a;
+      --red-invalid: #dc2626;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Card ─────────────────────────────── */
+    .verify-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--green-deep);
+      color: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.95rem;
+    }
+
+    .brand-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--green-deep);
+      letter-spacing: -0.5px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 36px;
+    }
+
+    /* ── Status Icon ──────────────────────── */
+    .status-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .status-icon.valid {
+      background: rgba(22, 163, 74, 0.1);
+      border: 2px solid var(--green-valid);
+      color: var(--green-valid);
+    }
+
+    .status-icon.valid svg { stroke: var(--green-valid); }
+
+    .status-icon.invalid {
+      background: rgba(220, 38, 38, 0.08);
+      border: 2px solid var(--red-invalid);
+      color: var(--red-invalid);
+    }
+
+    .status-icon.invalid svg { stroke: var(--red-invalid); }
+
+    .status-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-bottom: 20px;
+    }
+
+    .status-title.valid { color: var(--green-valid); }
+    .status-title.invalid { color: var(--red-invalid); }
+
+    /* ── Certificate Details ──────────────── */
+    .cert-details {
+      text-align: left;
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-top: 8px;
+    }
+
+    .cert-details .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .cert-details .row:last-child { border-bottom: none; }
+
+    .cert-details .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cert-details .value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--green-deep);
+    }
+
+    .invalid-msg {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .invalid-msg strong { color: var(--green-deep); }
+
+    /* ── Manual Input ─────────────────────── */
+    .manual-section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .manual-section label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+
+    .manual-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .manual-input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      color: var(--green-deep);
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .manual-input-row input:focus {
+      border-color: var(--green-mid);
+    }
+
+    .manual-input-row input::placeholder {
+      color: #a0a8a2;
+      font-weight: 500;
+    }
+
+    .manual-input-row button {
+      padding: 12px 22px;
+      background: var(--green-deep);
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .manual-input-row button:hover {
+      background: var(--green-mid);
+    }
+
+    /* ── Loading ──────────────────────────── */
+    .loading {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      padding: 32px 0;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green-mid);
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ───────────────────────── */
+    @media (max-width: 480px) {
+      .verify-card {
+        padding: 32px 24px;
+        border-radius: 1.5rem;
+      }
+
+      .manual-input-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="verify-card">
+    <div class="brand">
+      <div class="brand-logo">A</div>
+      <div class="brand-name">Annsetu</div>
+    </div>
+    <p class="card-title">Certificate Verification</p>
+
+    <div id="result-area">
+      <div class="loading">
+        <div class="spinner"></div>
+        Verifying certificate…
+      </div>
+    </div>
+
+    <div class="manual-section">
+      <label for="manual-id">Verify by Certificate ID</label>
+      <div class="manual-input-row">
+        <input type="text" id="manual-id" placeholder="e.g. PAN-XXXXX-XXXXX" />
+        <button onclick="manualVerify()">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const resultArea = document.getElementById('result-area');
+    const params = new URLSearchParams(window.location.search);
+    const certId = params.get('id');
+
+    if (certId) {
+      verifyCert(certId);
+    } else {
+      showNoId();
+    }
+
+    async function verifyCert(id) {
+      resultArea.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          Verifying certificate…
+        </div>`;
+
+      try {
+        const res = await fetch('/api/verify?id=' + encodeURIComponent(id));
+        const data = await res.json();
+        data.valid ? showValid(data.certificate) : showInvalid(id);
+      } catch (err) {
+        resultArea.innerHTML = `
+          <div class="status-icon invalid">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </div>
+          <div class="status-title invalid">Verification Error</div>
+          <p class="invalid-msg">Could not connect to the verification server. Please try again later.</p>`;
+      }
+    }
+
+    function showValid(cert) {
+      const date = new Date(cert.timestamp).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+
+      resultArea.innerHTML = `
+        <div class="status-icon valid">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 12 2 2 4-4"/>
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+        </div>
+        <div class="status-title valid">Certificate Verified</div>
+        <div class="cert-details">
+          <div class="row">
+            <span class="label">Certificate ID</span>
+            <span class="value">${cert.id}</span>
+          </div>
+          <div class="row">
+            <span class="label">Issued On</span>
+            <span class="value">${date}</span>
+          </div>
+          <div class="row">
+            <span class="label">Status</span>
+            <span class="value" style="color: var(--green-valid);">✓ Authentic</span>
+          </div>
+        </div>`;
+    }
+
+    function showInvalid(id) {
+      resultArea.innerHTML = `
+        <div class="status-icon invalid">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        <div class="status-title invalid">Not Found</div>
+        <p class="invalid-msg">
+          No certificate with ID <strong>${id}</strong> was found in our records.
+          This certificate may be invalid or the ID may be incorrect.
+        </p>`;
+    }
+
+    function showNoId() {
+      resultArea.innerHTML = `
+        <p class="invalid-msg" style="padding: 16px 0;">
+          Enter a Certificate ID below to verify its authenticity.
+        </p>`;
+    }
+
+    function manualVerify() {
+      const id = document.getElementById('manual-id').value.trim();
+      if (!id) return;
+      history.replaceState(null, '', '?id=' + encodeURIComponent(id));
+      verifyCert(id);
+    }
+
+    document.getElementById('manual-id').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') manualVerify();
+    });
+  </script>
+
+</body>
+</html>
