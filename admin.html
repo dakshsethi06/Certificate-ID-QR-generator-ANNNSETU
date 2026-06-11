@@ -207,6 +207,71 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── LOGIN ───────────────────────────────────── */
+    .login-container {
+      max-width: 400px;
+      margin: 80px auto;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    .login-container h2 {
+      font-size: 1.4rem;
+      color: var(--green-deep);
+      margin-bottom: 24px;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      transition: all 0.2s;
+    }
+
+    .login-container input:focus {
+      outline: none;
+      border-color: var(--green-mid);
+      background: var(--white);
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 14px;
+      background: var(--green-deep);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .login-container button:hover {
+      background: var(--green-mid);
+    }
+
+    .login-error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
   </style>
 </head>
 <body>
@@ -220,7 +285,18 @@
     </div>
   </nav>
 
-  <div class="container">
+  <!-- LOGIN SCREEN -->
+  <div class="login-container" id="login-screen">
+    <div class="nav-logo" style="margin: 0 auto 16px;">A</div>
+    <h2>Admin Login</h2>
+    <input type="text" id="inp-username" placeholder="Username" />
+    <input type="password" id="inp-password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
+    <div class="login-error" id="login-error">Invalid username or password.</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="container hidden" id="dashboard-screen">
     <div class="header-section">
       <div>
         <h1 class="title">Generated Certificates</h1>
@@ -249,14 +325,6 @@
           </thead>
           <tbody id="table-body">
             <!-- Data will be loaded here -->
-            <tr>
-              <td colspan="6">
-                <div class="state-message">
-                  <div class="spinner"></div>
-                  Loading database...
-                </div>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -264,8 +332,29 @@
   </div>
 
   <script>
+    let authHeaderValue = '';
+
+    function handleLogin() {
+      const u = document.getElementById('inp-username').value.trim();
+      const p = document.getElementById('inp-password').value.trim();
+      
+      if (!u || !p) return;
+
+      // Create Basic Auth token
+      authHeaderValue = 'Basic ' + btoa(u + ':' + p);
+      
+      // Attempt to load data
+      loadCertificates();
+    }
+
+    document.getElementById('inp-password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+
     async function loadCertificates() {
       const tbody = document.getElementById('table-body');
+      const loginError = document.getElementById('login-error');
+      
       tbody.innerHTML = `
         <tr>
           <td colspan="6">
@@ -277,7 +366,22 @@
         </tr>`;
 
       try {
-        const res = await fetch('/api/list');
+        const res = await fetch('/api/list', {
+          headers: {
+            'Authorization': authHeaderValue
+          }
+        });
+
+        if (res.status === 401) {
+          loginError.style.display = 'block';
+          return;
+        }
+
+        // Login successful, show dashboard
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('dashboard-screen').classList.remove('hidden');
+        loginError.style.display = 'none';
+
         const data = await res.json();
 
         if (!data.success || data.certificates.length === 0) {
@@ -328,9 +432,6 @@
           </tr>`;
       }
     }
-
-    // Load immediately
-    loadCertificates();
   </script>
 </body>
 </html>

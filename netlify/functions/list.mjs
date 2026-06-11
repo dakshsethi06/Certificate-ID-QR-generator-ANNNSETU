@@ -10,6 +10,30 @@ export default async (req, context) => {
   }
 
   try {
+    // Basic Authentication Check
+    const authHeader = req.headers.get("authorization");
+    const validUsername = process.env.ADMIN_USERNAME || "admin";
+    const validPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+    if (!authHeader || !authHeader.startsWith("Basic ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    // Decode base64 auth header
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    const [username, password] = credentials.split(':');
+
+    if (username !== validUsername || password !== validPassword) {
+      return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
     const store = getStore("certificates");
     const { blobs } = await store.list();
     
