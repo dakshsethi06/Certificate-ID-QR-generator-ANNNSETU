@@ -227,6 +227,13 @@ body {
   display: none;
 }
 
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .editor-label {
   display: flex;
   align-items: center;
@@ -234,8 +241,21 @@ body {
   color: var(--text-light);
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 12px;
   letter-spacing: 0.02em;
+}
+
+.size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.size-control input[type="range"] {
+  width: 100px;
+  accent-color: var(--green-deep);
 }
 
 .editor-container {

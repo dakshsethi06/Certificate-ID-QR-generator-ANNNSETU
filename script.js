@@ -7,9 +7,10 @@ const QR_ID_GAP = 6;           // px gap between QR and ID text (on canvas)
 let currentUID = '';
 let uploadedImage = null;
 
-// Position of the stamp (as fraction of image, 0–1). Default: bottom-left.
+// Position and scale of the stamp
 let stampPosX = 0.02;   // fraction from left
 let stampPosY = 0.82;   // fraction from top
+let stampScale = 1.0;   // scale multiplier
 
 // ── FILE HANDLING ────────────────────────────────────────────────────────────
 function handleFileSelect(event) {
@@ -36,9 +37,12 @@ function showPositionEditor(src) {
   document.getElementById('position-editor').classList.remove('hidden');
   document.getElementById('drop-zone').classList.add('hidden');
 
-  // Reset stamp to default bottom-left
+  // Reset stamp to default
   stampPosX = 0.02;
   stampPosY = 0.82;
+  stampScale = 1.0;
+  document.getElementById('size-slider').value = 1.0;
+  document.getElementById('stamp-handle').style.transform = `scale(1.0)`;
 
   // Wait for image to render, then position the stamp handle
   requestAnimationFrame(() => {
@@ -74,6 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const handle = document.getElementById('stamp-handle');
   const container = document.getElementById('editor-container');
   const dropZone = document.getElementById('drop-zone');
+  const sizeSlider = document.getElementById('size-slider');
+
+  // ── Stamp scaling ───────────────────────────────────────────────────
+  sizeSlider.addEventListener('input', (e) => {
+    stampScale = parseFloat(e.target.value);
+    // Apply visual scale to the handle via transform
+    handle.style.transform = `scale(${stampScale})`;
+    handle.style.transformOrigin = 'top left';
+  });
 
   // ── Stamp dragging ──────────────────────────────────────────────────
   handle.addEventListener('mousedown', startDrag);
@@ -201,9 +214,10 @@ async function renderCertificate(uid) {
   // 1. Draw the uploaded image
   ctx.drawImage(uploadedImage, 0, 0, W, H);
 
-  // 2. Calculate stamp position from the saved fractions
-  const qrSize = Math.round(W * QR_SIZE_RATIO);
-  const fontSize = Math.round(W * ID_FONT_RATIO);
+  // 2. Calculate stamp position and size from the saved fractions
+  const qrSize = Math.round(W * QR_SIZE_RATIO * stampScale);
+  const fontSize = Math.round(W * ID_FONT_RATIO * stampScale);
+  const gap = Math.round(QR_ID_GAP * stampScale);
 
   const x = Math.round(stampPosX * W);
   const y = Math.round(stampPosY * H);
@@ -218,11 +232,11 @@ async function renderCertificate(uid) {
   }
 
   // 4. ID text to the right of QR
-  ctx.font = `bold ${fontSize}px 'Lato', sans-serif`;
-  ctx.fillStyle = '#1a2642';
+  ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
+  ctx.fillStyle = '#00361A';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`ID: ${uid}`, x + qrSize + QR_ID_GAP, y + qrSize / 2);
+  ctx.fillText(`ID: ${uid}`, x + qrSize + gap, y + qrSize / 2);
 }
 
 // ── MAIN ACTIONS ─────────────────────────────────────────────────────────────

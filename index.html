@@ -44,13 +44,21 @@
 
         <!-- Position editor -->
         <div id="position-editor" class="position-editor hidden">
-          <div class="editor-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 9l7-7 7 7"/><path d="M12 2v14"/>
-              <path d="M5 15l7 7 7-7"/>
-            </svg>
-            Drag to position the QR code & ID stamp
+          <div class="editor-header">
+            <div class="editor-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 9l7-7 7 7"/><path d="M12 2v14"/>
+                <path d="M5 15l7 7 7-7"/>
+              </svg>
+              Drag to position
+            </div>
+            
+            <div class="size-control">
+              <label for="size-slider">Size:</label>
+              <input type="range" id="size-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+            </div>
           </div>
+          
           <div class="editor-container" id="editor-container">
             <img id="editor-img" alt="Certificate" draggable="false" />
             <div class="stamp-handle" id="stamp-handle" title="Drag to reposition">
