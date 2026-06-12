@@ -11,6 +11,16 @@ export default async (req, context) => {
   }
 
   try {
+    // Ensure the table exists in the new Supabase database
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id VARCHAR(255) PRIMARY KEY,
+        timestamp TIMESTAMP NOT NULL,
+        name VARCHAR(255),
+        position VARCHAR(255)
+      )
+    `);
+
     const url = new URL(req.url);
     const type = url.searchParams.get("type") || 'INT';
 
