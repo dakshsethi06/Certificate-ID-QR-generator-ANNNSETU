@@ -11,6 +11,7 @@ let uploadedImage = null;
 let stampPosX = 0.02;   // fraction from left
 let stampPosY = 0.82;   // fraction from top
 let stampScale = 1.0;   // scale multiplier
+let stampOpacity = 1.0; // transparency multiplier
 
 // ── FILE HANDLING ────────────────────────────────────────────────────────────
 function handleFileSelect(event) {
@@ -41,8 +42,11 @@ function showPositionEditor(src) {
   stampPosX = 0.02;
   stampPosY = 0.82;
   stampScale = 1.0;
+  stampOpacity = 1.0;
   document.getElementById('size-slider').value = 1.0;
+  document.getElementById('opacity-slider').value = 1.0;
   document.getElementById('stamp-handle').style.transform = `scale(1.0)`;
+  document.getElementById('stamp-handle').style.opacity = `1.0`;
 
   // Wait for image to render, then position the stamp handle
   requestAnimationFrame(() => {
@@ -79,13 +83,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('editor-container');
   const dropZone = document.getElementById('drop-zone');
   const sizeSlider = document.getElementById('size-slider');
+  const opacitySlider = document.getElementById('opacity-slider');
 
-  // ── Stamp scaling ───────────────────────────────────────────────────
+  // ── Stamp scaling & opacity ───────────────────────────────────────────────────
   sizeSlider.addEventListener('input', (e) => {
     stampScale = parseFloat(e.target.value);
     // Apply visual scale to the handle via transform
     handle.style.transform = `scale(${stampScale})`;
     handle.style.transformOrigin = 'top left';
+  });
+
+  opacitySlider.addEventListener('input', (e) => {
+    stampOpacity = parseFloat(e.target.value);
+    handle.style.opacity = stampOpacity;
   });
 
   // ── Stamp dragging ──────────────────────────────────────────────────
@@ -167,10 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
-function generateUID() {
-  const ts = Date.now().toString(36).toUpperCase();
-  const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
-  return `PAN-${ts}-${rand}`;
+async function fetchNextID(type) {
+  const res = await fetch(`/api/next-id?type=${type}`);
+  if (!res.ok) throw new Error('Failed to fetch next ID');
+  const data = await res.json();
+  return data.id;
 }
 
 function generateQRImage(text, size) {
@@ -222,6 +233,8 @@ async function renderCertificate(uid) {
   const x = Math.round(stampPosX * W);
   const y = Math.round(stampPosY * H);
 
+  ctx.globalAlpha = stampOpacity;
+
   // 3. QR code
   const verifyURL = `${window.location.origin}/verify.html?id=${uid}`;
   const qrImg = await generateQRImage(verifyURL, 256);
@@ -237,6 +250,8 @@ async function renderCertificate(uid) {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillText(`ID: ${uid}`, x + qrSize + gap, y + qrSize / 2);
+  
+  ctx.globalAlpha = 1.0;
 }
 
 // ── MAIN ACTIONS ─────────────────────────────────────────────────────────────
@@ -248,8 +263,16 @@ async function generateCertificate() {
 
   const nameInput = document.getElementById('inp-name').value.trim();
   const positionInput = document.getElementById('inp-position').value.trim();
+  const typeInput = document.getElementById('inp-type').value;
 
-  currentUID = generateUID();
+  try {
+    currentUID = await fetchNextID(typeInput);
+  } catch (err) {
+    console.error(err);
+    alert('Error fetching certificate ID. Please try again.');
+    return;
+  }
+
   const timestamp = new Date().toISOString();
   document.getElementById('out-certid').textContent = currentUID;
 

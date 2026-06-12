@@ -1,3 +1,4 @@
 node_modules/
 certificates.json
 .DS_Store
+.env

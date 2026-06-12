@@ -1,7 +1,9 @@
+require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const { Pool } = require('pg');
 
 const MIME = {
   '.html': 'text/html',
@@ -13,51 +15,118 @@ const MIME = {
   '.json': 'application/json',
 };
 
-const PORT = 8080;
-const DB_FILE = path.join(__dirname, 'certificates.json');
+const PORT = process.env.PORT || 8080;
 
-// ── Certificate Database ────────────────────────────────────────────────────
-function loadDB() {
+// ── PostgreSQL Database ─────────────────────────────────────────────────────
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+async function initDB() {
   try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return {};
+    // If you do not have DATABASE_URL set, pool.query will throw an error.
+    if (!process.env.DATABASE_URL) {
+      console.warn('DATABASE_URL is not set. Database will not be initialized.');
+      return;
+    }
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id VARCHAR(255) PRIMARY KEY,
+        timestamp TIMESTAMP NOT NULL
+      )
+    `);
+    await pool.query(`ALTER TABLE certificates ADD COLUMN IF NOT EXISTS name VARCHAR(255)`);
+    await pool.query(`ALTER TABLE certificates ADD COLUMN IF NOT EXISTS position VARCHAR(255)`);
+    console.log('Database initialized successfully.');
+  } catch (err) {
+    console.error('Error initializing database:', err);
   }
 }
 
-function saveDB(db) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
-}
+// Initialize database on startup
+initDB();
 
 // ── Server ──────────────────────────────────────────────────────────────────
 http.createServer((req, res) => {
   const parsed = url.parse(req.url, true);
   const pathname = parsed.pathname;
 
+  // ── API: Get next sequential ID ───────────────────────────────────────
+  if (pathname === '/api/next-id' && req.method === 'GET') {
+    const type = parsed.query.type || 'INT';
+    if (type !== 'INT' && type !== 'EMP') {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid type' }));
+      return;
+    }
+    const year = new Date().getFullYear();
+    const prefix = `PAN-${type}-${year}-`;
+    
+    try {
+      const result = await pool.query(
+        "SELECT id FROM certificates WHERE id LIKE $1 ORDER BY id DESC LIMIT 1",
+        [`${prefix}%`]
+      );
+      
+      let nextNum = 1;
+      if (result.rows.length > 0) {
+        const lastId = result.rows[0].id;
+        const lastNumStr = lastId.replace(prefix, '');
+        const lastNum = parseInt(lastNumStr, 10);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
+      }
+      
+      const nextId = `${prefix}${String(nextNum).padStart(3, '0')}`;
+      
+      // Reserve it
+      await pool.query(
+        "INSERT INTO certificates (id, timestamp) VALUES ($1, $2)",
+        [nextId, new Date().toISOString()]
+      );
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id: nextId }));
+    } catch (e) {
+      console.error('Error getting next ID:', e);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Database error occurred' }));
+    }
+    return;
+  }
+
   // ── API: Store a new certificate ──────────────────────────────────────
   if (pathname === '/api/store' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
+    req.on('end', async () => {
       try {
-        const { id, timestamp } = JSON.parse(body);
+        const { id, timestamp, name, position } = JSON.parse(body);
         if (!id) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Missing id' }));
           return;
         }
-        const db = loadDB();
-        db[id] = {
-          id,
-          timestamp: timestamp || new Date().toISOString(),
-        };
-        saveDB(db);
+        
+        const certTimestamp = timestamp || new Date().toISOString();
+        
+        await pool.query(
+          `INSERT INTO certificates (id, timestamp, name, position) 
+           VALUES ($1, $2, $3, $4) 
+           ON CONFLICT (id) DO UPDATE SET 
+             timestamp = EXCLUDED.timestamp, 
+             name = EXCLUDED.name, 
+             position = EXCLUDED.position`,
+          [id, certTimestamp, name || '', position || '']
+        );
+        
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, id }));
       } catch (e) {
+        console.error('Error storing certificate:', e);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: e.message }));
+        res.end(JSON.stringify({ error: 'Database error occurred' }));
       }
     });
     return;
@@ -66,13 +135,27 @@ http.createServer((req, res) => {
   // ── API: Verify a certificate ─────────────────────────────────────────
   if (pathname === '/api/verify' && req.method === 'GET') {
     const certId = parsed.query.id;
-    const db = loadDB();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    if (certId && db[certId]) {
-      res.end(JSON.stringify({ valid: true, certificate: db[certId] }));
-    } else {
-      res.end(JSON.stringify({ valid: false }));
+    
+    if (!certId) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ valid: false, error: 'Missing id' }));
+      return;
     }
+    
+    pool.query('SELECT * FROM certificates WHERE id = $1', [certId])
+      .then(result => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        if (result.rows.length > 0) {
+          res.end(JSON.stringify({ valid: true, certificate: result.rows[0] }));
+        } else {
+          res.end(JSON.stringify({ valid: false }));
+        }
+      })
+      .catch(e => {
+        console.error('Error verifying certificate:', e);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Database error occurred' }));
+      });
     return;
   }
 

@@ -1,12 +1,13 @@
-import { getStore } from "@netlify/blobs";
+import pg from 'pg';
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 export default async (req, context) => {
-  // Only allow GET
   if (req.method !== "GET") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" }
-    });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
   }
 
   try {
@@ -14,17 +15,13 @@ export default async (req, context) => {
     const id = url.searchParams.get("id");
 
     if (!id) {
-      return new Response(JSON.stringify({ error: "Missing id" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
+      return new Response(JSON.stringify({ error: "Missing id" }), { status: 400 });
     }
 
-    const store = getStore("certificates");
-    const data = await store.get(id);
+    const result = await pool.query('SELECT * FROM certificates WHERE id = $1', [id]);
 
-    if (data) {
-      return new Response(JSON.stringify({ valid: true, certificate: JSON.parse(data) }), {
+    if (result.rows.length > 0) {
+      return new Response(JSON.stringify({ valid: true, certificate: result.rows[0] }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
@@ -35,10 +32,7 @@ export default async (req, context) => {
       });
     }
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 };
 
