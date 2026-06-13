@@ -179,8 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 async function fetchNextID(type) {
   const res = await fetch(`/api/next-id?type=${type}`);
-  if (!res.ok) throw new Error('Failed to fetch next ID');
   const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to fetch next ID');
+  }
   return data.id;
 }
 
@@ -269,7 +271,7 @@ async function generateCertificate() {
     currentUID = await fetchNextID(typeInput);
   } catch (err) {
     console.error(err);
-    alert('Error fetching certificate ID. Please try again.');
+    alert('Error fetching certificate ID. Details: ' + err.message);
     return;
   }
 
