@@ -64,23 +64,43 @@ A serverless web application built for **PN Annsetu Networks** to generate uniqu
 ├── netlify.toml                  # Netlify build & function config
 ├── package.json                  # Dependencies (pg)
 ├── .env.example                  # Environment variable template
-└── netlify/functions/
-    ├── next-id.mjs               # Generate next sequential certificate ID
-    ├── store.mjs                 # Store/update certificate details
-    ├── verify.mjs                # Verify certificate by ID
-    ├── list.mjs                  # List all certificates (admin, auth required)
-    └── delete.mjs                # Revoke/delete certificate (admin, auth required)
+├── api/                          # Vercel Serverless Functions
+│   ├── delete.mjs                # Revoke/delete certificate (admin, auth required)
+│   ├── list.mjs                  # List all certificates (admin, auth required)
+│   ├── next-id.mjs               # Generate next sequential certificate ID
+│   ├── store.mjs                 # Store/update certificate details
+│   └── verify.mjs                # Verify certificate by ID
+└── netlify/functions/            # Netlify Serverless Functions (duplicated for Netlify)
+    ├── delete.mjs
+    ├── list.mjs
+    ├── next-id.mjs
+    ├── store.mjs
+    └── verify.mjs
 ```
 
 ---
 
-## 🚀 Deployment (Netlify)
+## 🚀 Deployment
 
-This project is designed to run on Netlify's free tier.
+This project supports seamless deployment on both **Vercel** and **Netlify** using their free tiers.
+
+### Option A: Vercel (Recommended Alternative)
+
+If Netlify limits are reached, Vercel is the recommended hosting platform:
+1. Push this repository to GitHub.
+2. Go to [Vercel](https://vercel.com) and click **Add New Project**.
+3. Import your GitHub repository.
+4. Vercel automatically detects the static files and the `/api/` directory (containing serverless functions).
+5. Add the required **Environment Variables** (see table below) in Vercel.
+6. Click **Deploy**.
+
+### Option B: Netlify
 
 1. Push this repository to GitHub.
 2. Connect the repository to a new Netlify site.
-3. The `netlify.toml` file auto-configures the build settings and serverless functions.
+3. The `netlify.toml` file auto-configures the build settings and serverless functions under `netlify/functions/`.
+4. Add the required **Environment Variables** (see table below) in Netlify.
+5. Click **Deploy**.
 
 ### Environment Variables
 
