@@ -67,6 +67,13 @@
       font-size: 0.95rem;
     }
 
+    .nav-logo-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
     .nav-name {
       font-size: 1.1rem;
       font-weight: 800;
@@ -279,7 +286,7 @@
   <nav class="navbar">
     <div class="nav-inner">
       <a class="nav-brand" href="/">
-        <div class="nav-logo">A</div>
+        <img class="nav-logo-img" src="icon-512.png" alt="Annsetu Logo" />
         <div class="nav-name">Annsetu</div>
       </a>
     </div>
@@ -287,7 +294,7 @@
 
   <!-- LOGIN SCREEN -->
   <div class="login-container" id="login-screen">
-    <div class="nav-logo" style="margin: 0 auto 16px;">A</div>
+    <img class="nav-logo-img" src="icon-512.png" alt="Annsetu Logo" style="margin: 0 auto 16px;" />
     <h2>Admin Login</h2>
     <input type="text" id="inp-username" placeholder="Username" />
     <input type="password" id="inp-password" placeholder="Password" />

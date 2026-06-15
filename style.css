@@ -87,6 +87,19 @@ body {
   border-radius: 8px;
 }
 
+.nav-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.nav-logo-img.small {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
 .nav-name {
   font-size: 1.3rem;
   font-weight: 800;
@@ -317,8 +330,7 @@ body {
   padding: 4px 6px;
   border: 2px solid var(--green-mid);
   border-radius: 8px;
-  background: rgba(26, 77, 46, 0.1);
-  backdrop-filter: blur(4px);
+  background: transparent;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
