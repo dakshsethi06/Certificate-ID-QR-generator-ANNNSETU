@@ -230,28 +230,45 @@ async function renderCertificate(uid) {
   // 2. Calculate stamp position and size from the saved fractions
   const qrSize = Math.round(W * QR_SIZE_RATIO * stampScale);
   const fontSize = Math.round(W * ID_FONT_RATIO * stampScale);
-  const gap = Math.round(QR_ID_GAP * stampScale);
+  const gap = Math.round(W * 0.008 * stampScale);       // proportional gap
+  const padding = Math.round(qrSize * 0.08);             // padding around QR
 
   const x = Math.round(stampPosX * W);
   const y = Math.round(stampPosY * H);
 
   ctx.globalAlpha = stampOpacity;
 
-  // 3. QR code
+  // 3. QR code with white background
   const verifyURL = `${window.location.origin}/verify.html?id=${uid}`;
   const qrImg = await generateQRImage(verifyURL, 256);
   if (qrImg) {
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x - 4, y - 4, qrSize + 8, qrSize + 8);
+    ctx.fillRect(x - padding, y - padding, qrSize + padding * 2, qrSize + padding * 2);
     ctx.drawImage(qrImg, x, y, qrSize, qrSize);
   }
 
-  // 4. ID text to the right of QR
+  // 4. ID text to the right of QR, vertically centered
   ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
+  const textX = x + qrSize + padding + gap;
+  const textY = y + qrSize / 2;
+  const textStr = `ID: ${uid}`;
+  const textMetrics = ctx.measureText(textStr);
+  const textPadH = Math.round(fontSize * 0.4);
+  const textPadV = Math.round(fontSize * 0.35);
+
+  // White background behind text
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(
+    textX - textPadH,
+    textY - fontSize / 2 - textPadV,
+    textMetrics.width + textPadH * 2,
+    fontSize + textPadV * 2
+  );
+
   ctx.fillStyle = '#00361A';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`ID: ${uid}`, x + qrSize + gap, y + qrSize / 2);
+  ctx.fillText(textStr, textX, textY);
   
   ctx.globalAlpha = 1.0;
 }

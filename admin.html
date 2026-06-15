@@ -127,6 +127,60 @@
       background: #F59E0B;
     }
 
+    /* ── FILTER TABS ─────────────────────────────── */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .filter-tab {
+      padding: 8px 20px;
+      border: 2px solid var(--border);
+      border-radius: 100px;
+      background: var(--white);
+      color: var(--text-light);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+      border-color: var(--green-mid);
+      color: var(--green-deep);
+    }
+
+    .filter-tab.active {
+      background: var(--green-deep);
+      border-color: var(--green-deep);
+      color: var(--white);
+    }
+
+    .filter-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      margin-left: 6px;
+    }
+
+    .filter-tab.active .filter-count {
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+    }
+
+    .filter-tab:not(.active) .filter-count {
+      background: var(--bg-alt);
+      color: var(--text-light);
+    }
+
     /* ── TABLE ───────────────────────────────────── */
     .card {
       background: var(--white);
@@ -317,6 +371,18 @@
       </button>
     </div>
 
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">
+        All <span class="filter-count" id="count-all">0</span>
+      </button>
+      <button class="filter-tab" data-filter="INT" onclick="setFilter('INT')">
+        Interns <span class="filter-count" id="count-int">0</span>
+      </button>
+      <button class="filter-tab" data-filter="EMP" onclick="setFilter('EMP')">
+        Employees <span class="filter-count" id="count-emp">0</span>
+      </button>
+    </div>
+
     <div class="card">
       <div class="table-container">
         <table>
@@ -341,6 +407,77 @@
 
   <script>
     let authHeaderValue = '';
+    let allCertificates = [];
+    let activeFilter = 'all';
+
+    function setFilter(filter) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      renderTable(getFilteredCerts());
+    }
+
+    function getFilteredCerts() {
+      if (activeFilter === 'all') return allCertificates;
+      return allCertificates.filter(c => c.id.includes(`-${activeFilter}-`));
+    }
+
+    function updateCounts() {
+      const intCount = allCertificates.filter(c => c.id.includes('-INT-')).length;
+      const empCount = allCertificates.filter(c => c.id.includes('-EMP-')).length;
+      document.getElementById('count-all').textContent = allCertificates.length;
+      document.getElementById('count-int').textContent = intCount;
+      document.getElementById('count-emp').textContent = empCount;
+    }
+
+    function renderTable(certs) {
+      const tbody = document.getElementById('table-body');
+      if (certs.length === 0) {
+        const label = activeFilter === 'all' ? '' : (activeFilter === 'INT' ? ' intern' : ' employee');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="state-message">
+                No${label} certificates generated yet.
+              </div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = certs.map(cert => {
+        const date = new Date(cert.timestamp).toLocaleString('en-IN', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+        const typeBadge = cert.id.includes('-INT-')
+          ? '<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.7rem;font-weight:700;background:#DBEAFE;color:#1E40AF;">Intern</span>'
+          : '<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.7rem;font-weight:700;background:#FEF3C7;color:#92400E;">Employee</span>';
+
+        return `
+          <tr>
+            <td><span class="id-cell">${cert.id}</span></td>
+            <td>${cert.name || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
+            <td>${cert.position || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
+            <td>${date}</td>
+            <td>
+              <span class="status-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Authentic
+              </span>
+              ${typeBadge}
+            </td>
+            <td>
+              <a href="/verify.html?id=${encodeURIComponent(cert.id)}" target="_blank" style="color: var(--green-deep); font-weight: 700; text-decoration: none;">View →</a>
+            </td>
+            <td>
+              <button onclick="revokeCertificate('${cert.id}')" style="background:transparent; border:none; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; text-decoration:underline;">Revoke</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
 
     function handleLogin() {
       const u = document.getElementById('inp-username').value.trim();
@@ -392,45 +529,9 @@
 
         const data = await res.json();
 
-        if (!data.success || data.certificates.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="7">
-                <div class="state-message">
-                  No certificates generated yet.
-                </div>
-              </td>
-            </tr>`;
-          return;
-        }
-
-        tbody.innerHTML = data.certificates.map(cert => {
-          const date = new Date(cert.timestamp).toLocaleString('en-IN', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
-          
-          return `
-            <tr>
-              <td><span class="id-cell">${cert.id}</span></td>
-              <td>${cert.name || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
-              <td>${cert.position || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
-              <td>${date}</td>
-              <td>
-                <span class="status-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  Authentic
-                </span>
-              </td>
-              <td>
-                <a href="/verify.html?id=${encodeURIComponent(cert.id)}" target="_blank" style="color: var(--green-deep); font-weight: 700; text-decoration: none;">View →</a>
-              </td>
-              <td>
-                <button onclick="revokeCertificate('${cert.id}')" style="background:transparent; border:none; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; text-decoration:underline;">Revoke</button>
-              </td>
-            </tr>
-          `;
-        }).join('');
+        allCertificates = (data.success && data.certificates) ? data.certificates : [];
+        updateCounts();
+        renderTable(getFilteredCerts());
 
       } catch (err) {
         tbody.innerHTML = `
