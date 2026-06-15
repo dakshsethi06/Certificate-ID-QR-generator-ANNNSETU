@@ -431,6 +431,21 @@
       document.getElementById('count-emp').textContent = empCount;
     }
 
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeJS(str) {
+      if (!str) return '';
+      return str.toString().replace(/'/g, "\\'");
+    }
+
     function renderTable(certs) {
       const tbody = document.getElementById('table-body');
       if (certs.length === 0) {
@@ -455,11 +470,16 @@
           ? '<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.7rem;font-weight:700;background:#DBEAFE;color:#1E40AF;">Intern</span>'
           : '<span style="display:inline-block;padding:2px 8px;border-radius:100px;font-size:0.7rem;font-weight:700;background:#FEF3C7;color:#92400E;">Employee</span>';
 
+        const escapedId = escapeHTML(cert.id);
+        const jsEscapedId = escapeJS(cert.id);
+        const nameVal = cert.name ? escapeHTML(cert.name) : '<span style="color:var(--text-light); font-style:italic">N/A</span>';
+        const positionVal = cert.position ? escapeHTML(cert.position) : '<span style="color:var(--text-light); font-style:italic">N/A</span>';
+
         return `
           <tr>
-            <td><span class="id-cell">${cert.id}</span></td>
-            <td>${cert.name || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
-            <td>${cert.position || '<span style="color:var(--text-light); font-style:italic">N/A</span>'}</td>
+            <td><span class="id-cell">${escapedId}</span></td>
+            <td>${nameVal}</td>
+            <td>${positionVal}</td>
             <td>${date}</td>
             <td>
               <span class="status-badge">
@@ -472,7 +492,7 @@
               <a href="/verify.html?id=${encodeURIComponent(cert.id)}" target="_blank" style="color: var(--green-deep); font-weight: 700; text-decoration: none;">View →</a>
             </td>
             <td>
-              <button onclick="revokeCertificate('${cert.id}')" style="background:transparent; border:none; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; text-decoration:underline;">Revoke</button>
+              <button onclick="revokeCertificate('${jsEscapedId}')" style="background:transparent; border:none; color:#dc2626; cursor:pointer; font-weight:600; font-family:inherit; text-decoration:underline;">Revoke</button>
             </td>
           </tr>
         `;

@@ -326,6 +326,16 @@
       }
     }
 
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function showValid(cert) {
       const date = new Date(cert.timestamp).toLocaleDateString('en-IN', {
         day: '2-digit', month: 'long', year: 'numeric'
@@ -343,16 +353,16 @@
           ${cert.name ? `
           <div class="row">
             <span class="label">Issued To</span>
-            <span class="value">${cert.name}</span>
+            <span class="value">${escapeHTML(cert.name)}</span>
           </div>` : ''}
           ${cert.position ? `
           <div class="row">
             <span class="label">Position</span>
-            <span class="value">${cert.position}</span>
+            <span class="value">${escapeHTML(cert.position)}</span>
           </div>` : ''}
           <div class="row">
             <span class="label">Certificate ID</span>
-            <span class="value">${cert.id}</span>
+            <span class="value">${escapeHTML(cert.id)}</span>
           </div>
           <div class="row">
             <span class="label">Issued On</span>
@@ -374,7 +384,7 @@
         </div>
         <div class="status-title invalid">Not Found</div>
         <p class="invalid-msg">
-          No certificate with ID <strong>${id}</strong> was found in our records.
+          No certificate with ID <strong>${escapeHTML(id)}</strong> was found in our records.
           This certificate may be invalid or the ID may be incorrect.
         </p>`;
     }

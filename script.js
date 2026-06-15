@@ -6,6 +6,7 @@ const QR_ID_GAP = 6;           // px gap between QR and ID text (on canvas)
 // ── STATE ────────────────────────────────────────────────────────────────────
 let currentUID = '';
 let uploadedImage = null;
+let authHeaderValue = '';
 
 // Position and scale of the stamp
 let stampPosX = 0.02;   // fraction from left
@@ -180,7 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchNextID(type, name) {
   const params = new URLSearchParams({ type });
   if (name) params.append('name', name);
-  const res = await fetch(`/api/next-id?${params}`);
+  const res = await fetch(`/api/next-id?${params}`, {
+    headers: { 'Authorization': authHeaderValue }
+  });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || 'Failed to fetch next ID');
@@ -302,7 +305,7 @@ async function generateCertificate() {
   const timestamp = new Date().toISOString();
   document.getElementById('out-certid').textContent = currentUID;
 
-  document.getElementById('btn-section').style.display = 'none';
+  document.getElementById('btn-section').classList.add('hidden');
   const certSection = document.getElementById('cert-section');
   certSection.classList.remove('hidden');
 
@@ -311,7 +314,10 @@ async function generateCertificate() {
 
     await fetch('/api/store', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': authHeaderValue
+      },
       body: JSON.stringify({ 
         id: currentUID, 
         timestamp,
@@ -337,10 +343,51 @@ function downloadPNG() {
 
 function resetForm() {
   document.getElementById('cert-section').classList.add('hidden');
-  const bs = document.getElementById('btn-section');
-  bs.style.display = '';
+  document.getElementById('btn-section').classList.remove('hidden');
   document.getElementById('inp-name').value = '';
   document.getElementById('inp-position').value = '';
   clearFile();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+async function handleLogin() {
+  const u = document.getElementById('inp-username').value.trim();
+  const p = document.getElementById('inp-password').value.trim();
+  const loginError = document.getElementById('login-error');
+  
+  if (!u || !p) return;
+
+  const testAuthHeader = 'Basic ' + btoa(u + ':' + p);
+  
+  try {
+    const res = await fetch('/api/list', {
+      headers: { 'Authorization': testAuthHeader }
+    });
+    
+    if (res.status === 401) {
+      loginError.style.display = 'block';
+      return;
+    }
+    
+    if (res.ok) {
+      authHeaderValue = testAuthHeader;
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('btn-section').classList.remove('hidden');
+      loginError.style.display = 'none';
+    } else {
+      alert('Verification server returned an error. Please try again.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Failed to connect to the verification server.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pwInput = document.getElementById('inp-password');
+  if (pwInput) {
+    pwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  }
+});

@@ -6,39 +6,60 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Auth helper
+function authenticate(req) {
+  const authHeader = req.headers.get("authorization");
+  const validUsername = process.env.ADMIN_USERNAME;
+  const validPassword = process.env.ADMIN_PASSWORD;
+
+  if (!validUsername || !validPassword) {
+    return false; // Env vars not set — deny access
+  }
+
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+  const [username, password] = credentials.split(':');
+
+  return username === validUsername && password === validPassword;
+}
+
 export default async (req, context) => {
   if (req.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
   }
 
-  try {
-    // Ensure the table exists in the new Supabase database
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS certificates (
-        id VARCHAR(255) PRIMARY KEY,
-        timestamp TIMESTAMP NOT NULL,
-        name VARCHAR(255),
-        position VARCHAR(255)
-      )
-    `);
+  // Require admin auth to generate certificates
+  if (!authenticate(req)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
 
+  try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type") || 'INT';
-    const name = url.searchParams.get("name") || '';
+    const name = (url.searchParams.get("name") || '').trim();
 
     if (type !== 'INT' && type !== 'EMP') {
       return new Response(JSON.stringify({ error: 'Invalid type' }), { status: 400 });
+    }
+
+    // Validate input lengths
+    if (name.length > 255) {
+      return new Response(JSON.stringify({ error: 'Name is too long (max 255 characters)' }), { status: 400 });
     }
 
     // Check for duplicate name (case-insensitive)
     if (name) {
       const dupCheck = await pool.query(
         "SELECT id FROM certificates WHERE LOWER(name) = LOWER($1)",
-        [name.trim()]
+        [name]
       );
       if (dupCheck.rows.length > 0) {
         return new Response(JSON.stringify({ 
-          error: `A certificate has already been issued to "${name}" (ID: ${dupCheck.rows[0].id}). Duplicate names are not allowed.` 
+          error: `A certificate has already been issued to "${name}". Duplicate names are not allowed.` 
         }), { status: 409 });
       }
     }
@@ -66,7 +87,7 @@ export default async (req, context) => {
     // Reserve it with the name
     await pool.query(
       "INSERT INTO certificates (id, timestamp, name) VALUES ($1, $2, $3)",
-      [nextId, new Date().toISOString(), name.trim() || null]
+      [nextId, new Date().toISOString(), name || null]
     );
 
     return new Response(JSON.stringify({ id: nextId }), {
@@ -74,7 +95,8 @@ export default async (req, context) => {
       headers: { "Content-Type": "application/json" }
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    console.error('next-id error:', e);
+    return new Response(JSON.stringify({ error: "Failed to generate certificate ID. Please try again." }), { status: 500 });
   }
 };
 

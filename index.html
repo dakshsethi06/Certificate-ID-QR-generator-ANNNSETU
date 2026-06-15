@@ -20,8 +20,18 @@
     </div>
   </nav>
 
+  <!-- LOGIN SCREEN -->
+  <div class="login-container" id="login-screen">
+    <img class="nav-logo-img" src="icon-512.png" alt="Annsetu Logo" style="margin: 0 auto 16px; display: block;" />
+    <h2>Admin Login</h2>
+    <input type="text" id="inp-username" placeholder="Username" />
+    <input type="password" id="inp-password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
+    <div class="login-error" id="login-error">Invalid username or password.</div>
+  </div>
+
   <!-- HERO SECTION -->
-  <section class="hero" id="btn-section">
+  <section class="hero hidden" id="btn-section">
     <div class="hero-inner">
       <div class="hero-badge">Certificate Generator</div>
       <h1 class="hero-title">Generate Verified Certificates<br/><span class="hero-highlight">with QR Authentication.</span></h1>

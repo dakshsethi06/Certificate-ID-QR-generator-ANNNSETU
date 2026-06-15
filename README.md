@@ -9,6 +9,7 @@ A serverless web application built for **PN Annsetu Networks** to generate uniqu
 ## 🌟 Features
 
 ### Certificate Generation
+- **Secured Generator** — Basic Auth–protected page prevents unauthorized certificate generation
 - **Dynamic Uploads** — Upload any certificate template (PNG, JPG, JPEG)
 - **Recipient Details** — Capture name and position/role, stored in the database
 - **Duplicate Prevention** — Case-insensitive duplicate name check prevents issuing multiple certificates to the same person
@@ -20,6 +21,7 @@ A serverless web application built for **PN Annsetu Networks** to generate uniqu
 ### Verification
 - **Public Verification Page** — Scanning the QR code validates the certificate against the database and displays the recipient's details
 - **Real-time Status** — Shows whether a certificate is authentic or invalid
+- **XSS-Safe Rendering** — Securely escapes recipient details and query inputs before rendering.
 
 ### Admin Dashboard (`/admin.html`)
 - **Secured Login** — Basic Auth–protected admin portal
@@ -27,6 +29,15 @@ A serverless web application built for **PN Annsetu Networks** to generate uniqu
 - **Type Badges** — Each row shows a color-coded Intern/Employee badge
 - **Certificate Revocation** — Permanently revoke and delete invalid certificates
 - **Refresh Data** — Live reload from the database
+
+---
+
+## 🔒 Security Features
+- **Strict Endpoint Authentication** — Netlify endpoints (`/api/next-id`, `/api/store`, `/api/list`, `/api/delete`) require Basic Auth header validation matched against server-side environment credentials.
+- **XSS Protections** — Custom HTML/JS escaping helpers applied before rendering database contents on `/admin.html` and inputs on `/verify.html`.
+- **SQL Injection Prevention** — Full parameterized queries (`$1`, `$2`, etc.) used in all pool client queries.
+- **Strict Input Validation** — Pattern matching on inputs (e.g., verification ID regex checks) and size limits.
+- **Secure Error Handling** — Generic client responses used instead of leaking raw DB internals.
 
 ---
 

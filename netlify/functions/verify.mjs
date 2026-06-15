@@ -19,6 +19,14 @@ export default async (req, context) => {
       return new Response(JSON.stringify({ error: "Missing id" }), { status: 400 });
     }
 
+    // Validate ID format (only allow expected characters)
+    if (!/^[A-Z0-9\-]{1,50}$/.test(id)) {
+      return new Response(JSON.stringify({ valid: false }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
     const result = await pool.query('SELECT * FROM certificates WHERE id = $1', [id]);
 
     if (result.rows.length > 0) {
@@ -33,7 +41,8 @@ export default async (req, context) => {
       });
     }
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    console.error('verify error:', e);
+    return new Response(JSON.stringify({ error: "Verification failed. Please try again." }), { status: 500 });
   }
 };
 
