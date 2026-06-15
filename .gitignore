@@ -1,4 +1,20 @@
+# Dependencies
 node_modules/
-certificates.json
-.DS_Store
+
+# Environment
 .env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files
+package-lock.json
+
+# Local data
+certificates.json
+
+# Test/sample images
+certi.pptx.png
+events_tar.png
