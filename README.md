@@ -1,54 +1,112 @@
 # Annsetu Certificate Generator & Verifier
 
-A serverless web application built for PN Annsetu Networks to generate uniquely identifiable certificates, embed QR codes onto them, and provide a secure public verification portal. 
+A serverless web application built for **PN Annsetu Networks** to generate uniquely identifiable certificates, embed QR codes onto them, and provide a secure public verification portal.
+
+**Live:** [qrcodegeneratorannsetu.netlify.app](https://qrcodegeneratorannsetu.netlify.app)
+
+---
 
 ## 🌟 Features
 
-- **Dynamic Uploads:** Upload any raw certificate template (PNG, JPG, JPEG).
-- **Recipient Details:** Capture the recipient's Name and Position/Role to store in the database.
-- **Visual Position Editor:** Drag and drop the QR + ID stamp exactly where you want it on the certificate.
-- **Size Scaling:** Adjust the size of the QR stamp using a built-in slider to fit any design.
-- **Instant Generation:** Generates a secure, unique `PAN-XXXXX-XXXXX` ID and embeds a scannable QR code directly onto the image via HTML5 Canvas.
-- **Serverless Database:** Uses Netlify Blobs for fast, zero-config key-value storage of authentic certificates.
-- **Public Verification Page:** Scanning the QR code takes users to a secure page that validates the certificate against the database and displays the recipient's details.
-- **Admin Dashboard:** A secured portal (`/admin.html`) to view all issued certificates and revoke/delete invalid ones.
+### Certificate Generation
+- **Dynamic Uploads** — Upload any certificate template (PNG, JPG, JPEG)
+- **Recipient Details** — Capture name and position/role, stored in the database
+- **Duplicate Prevention** — Case-insensitive duplicate name check prevents issuing multiple certificates to the same person
+- **Visual Position Editor** — Drag-and-drop the QR + ID stamp exactly where you want it
+- **Size & Opacity Controls** — Adjust the stamp size and transparency with built-in sliders
+- **Instant Generation** — Generates a unique sequential ID (e.g., `PAN-INT-2026-001`) and embeds a scannable QR code via HTML5 Canvas
+- **Employee Types** — Supports both Intern (`INT`) and Employee (`EMP`) certificate types
+
+### Verification
+- **Public Verification Page** — Scanning the QR code validates the certificate against the database and displays the recipient's details
+- **Real-time Status** — Shows whether a certificate is authentic or invalid
+
+### Admin Dashboard (`/admin.html`)
+- **Secured Login** — Basic Auth–protected admin portal
+- **Filter Tabs** — View all certificates, or filter by Interns / Employees with live counts
+- **Type Badges** — Each row shows a color-coded Intern/Employee badge
+- **Certificate Revocation** — Permanently revoke and delete invalid certificates
+- **Refresh Data** — Live reload from the database
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Vanilla HTML, CSS (Custom Annsetu brand design), JavaScript, HTML5 Canvas
-- **Backend:** Netlify Serverless Functions (`Node.js`)
-- **Database:** Netlify Blobs (Key-Value Store)
-- **Libraries:** `qrcode.js` (Client-side QR generation)
+| Layer | Technology |
+|---|---|
+| **Frontend** | Vanilla HTML, CSS, JavaScript, HTML5 Canvas |
+| **Backend** | Netlify Serverless Functions (Node.js) |
+| **Database** | PostgreSQL (Neon) |
+| **Libraries** | `qrcode.js` (client-side QR generation), `pg` (PostgreSQL client) |
+
+---
+
+## 📁 Project Structure
+
+```
+├── index.html                    # Certificate generator page
+├── verify.html                   # Public certificate verification page
+├── admin.html                    # Admin dashboard (protected)
+├── script.js                     # Frontend logic (upload, drag, canvas rendering)
+├── style.css                     # Global styles (Annsetu brand design)
+├── icon-512.png                  # Annsetu logo
+├── netlify.toml                  # Netlify build & function config
+├── package.json                  # Dependencies (pg)
+├── .env.example                  # Environment variable template
+└── netlify/functions/
+    ├── next-id.mjs               # Generate next sequential certificate ID
+    ├── store.mjs                 # Store/update certificate details
+    ├── verify.mjs                # Verify certificate by ID
+    ├── list.mjs                  # List all certificates (admin, auth required)
+    └── delete.mjs                # Revoke/delete certificate (admin, auth required)
+```
+
+---
 
 ## 🚀 Deployment (Netlify)
 
-This project is built to run perfectly on Netlify's free tier. 
+This project is designed to run on Netlify's free tier.
 
 1. Push this repository to GitHub.
-2. Connect the repository to Netlify.
-3. The `netlify.toml` file will automatically configure the build settings and serverless functions.
-4. **Enable Blobs:** Ensure that Netlify Blobs are available for your site (usually automatic for serverless functions).
+2. Connect the repository to a new Netlify site.
+3. The `netlify.toml` file auto-configures the build settings and serverless functions.
 
 ### Environment Variables
 
-To secure the Admin Dashboard (`/admin.html`), set the following environment variables in your Netlify Site Configuration (under **Build & deploy > Environment**):
+Set the following in **Netlify → Site configuration → Environment variables**:
 
-- `ADMIN_USERNAME`: Your chosen admin username (Fallback: `admin`)
-- `ADMIN_PASSWORD`: Your chosen secure password (Fallback: `admin123`)
+| Variable | Description | Default |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (e.g., from [Neon](https://neon.tech)) | *Required* |
+| `ADMIN_USERNAME` | Admin dashboard username | `admin` |
+| `ADMIN_PASSWORD` | Admin dashboard password | `admin123` |
 
-*Note: You must trigger a new deploy after changing environment variables for them to take effect.*
+> ⚠️ **Important:** You must trigger a new deploy after changing environment variables.
+
+### Database Setup
+
+1. Create a free PostgreSQL database on [Neon](https://neon.tech) (or any PostgreSQL provider).
+2. Copy the connection string and set it as `DATABASE_URL` on Netlify.
+3. The `certificates` table is auto-created on the first request.
+
+---
 
 ## 💻 Local Development
 
-If you want to run the project locally on your machine:
+To run locally, use the [Netlify CLI](https://docs.netlify.com/cli/get-started/):
 
-1. You must use a local web server (opening `index.html` directly in the browser will block the Canvas API due to CORS).
-2. A simple Node.js server is included. Run it using:
-   ```bash
-   node serve.js
-   ```
-3. Open `http://localhost:8080`.
-*(Note: The local `serve.js` saves data to a local `certificates.json` file. It does not connect to your live Netlify database).*
+```bash
+npm install
+npx netlify dev
+```
+
+Create a `.env` file from the template:
+```bash
+cp .env.example .env
+```
+
+Then update `DATABASE_URL` in `.env` with your PostgreSQL connection string.
 
 ---
+
 *© 2026 PN ANNSETU NETWORKS PRIVATE LIMITED.*
